@@ -1,0 +1,121 @@
+// Prisma Schema — 大熊猫网站
+// MongoDB connector
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// ===== 板块内容（首页各区块）=====
+model Section {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  slug      String   @unique
+  title     String
+  subtitle  String?
+  content   Json
+  seoTitle  String?
+  seoDesc   String?
+  ogImage   String?
+  published Boolean  @default(true)
+  order     Int      @default(0)
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@map("sections")
+}
+
+// ===== 文章 =====
+model Article {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  slug        String    @unique
+  excerpt     String?
+  content     Json
+  category    String    @default("general")
+  tags        String[]
+  coverImage  String?
+  seoTitle    String?
+  seoDesc     String?
+  published   Boolean   @default(false)
+  publishedAt DateTime?
+  views       Int       @default(0)
+  author      User      @relation(fields: [authorId], references: [id])
+  authorId    String    @db.ObjectId
+  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime  @default(now())
+
+  @@map("articles")
+}
+
+// ===== 媒体资源 =====
+model Media {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  filename  String
+  url       String
+  mimeType  String
+  size      Int
+  alt       String?
+  width     Int?
+  height    Int?
+  createdAt DateTime @default(now())
+
+  @@map("media")
+}
+
+// ===== 用户 =====
+model User {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  email     String    @unique
+  password  String
+  name      String
+  avatar    String?
+  role      Role      @default(EDITOR)
+  active    Boolean   @default(true)
+  articles  Article[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@map("users")
+}
+
+// ===== 页面访问统计 =====
+model PageView {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  path      String
+  ua        String?
+  ip        String?
+  referer   String?
+  country   String?
+  createdAt DateTime @default(now())
+
+  @@map("page_views")
+}
+
+// ===== 全站 SEO 配置 =====
+model SeoConfig {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  siteName        String   @default("大熊猫 · 中国国宝")
+  defaultTitle    String   @default("大熊猫简介 — 中国国宝")
+  defaultDesc     String   @default("深入了解大熊猫的生活习性、栖息地、保护现状及趣味知识")
+  keywords        String[] @default(["大熊猫", "giant panda", "濒危动物", "中国国宝"])
+  ogImage         String?
+  twitterCard     String   @default("summary_large_image")
+  twitterSite     String?
+  gaId            String?
+  baiduVerify     String?
+  googleVerify    String?
+  robotsTxt       String?
+  updatedAt       DateTime @updatedAt
+  createdAt       DateTime @default(now())
+
+  @@map("seo_configs")
+}
+
+enum Role {
+  ADMIN
+  EDITOR
+}
